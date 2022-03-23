@@ -10,10 +10,10 @@ import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.jitsi.meet.sdk.BroadcastEvent
-import org.jitsi.meet.sdk.BroadcastIntentHelper
 import org.jitsi.meet.sdk.JitsiMeetActivity
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions
 import java.net.URL
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,19 +27,28 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val joinButton = findViewById<Button>(R.id.joinButton)
+        val joinButton = findViewById<Button>(R.id.nativeJoinButton)
+        val joinWebButton = findViewById<Button>(R.id.webViewJoinButton)
+        val roomName = findViewById<EditText>(R.id.roomNameEditTxt)
 
         registerForBroadcastMessages()
 
         joinButton.setOnClickListener {
-            val roomName = findViewById<EditText>(R.id.conferenceName)
             if (roomName.text.isNotEmpty()) {
-
                 //Native approach
-                //startCall(roomName.text.toString())
+                startCall(roomName.text.toString())
+            } else {
+                roomName.error = "Enter room name!"
+            }
+        }
 
+        joinWebButton.setOnClickListener {
+            if (roomName.text.isNotEmpty()) {
                 //WebView approach
+                //checkForAndAskForPermissions()
                 startWebView(roomName.text.toString())
+            } else {
+                roomName.error = "Enter room name!"
             }
         }
     }
@@ -59,16 +68,10 @@ class MainActivity : AppCompatActivity() {
     private fun startCall(roomName: String) {
         val options = JitsiMeetConferenceOptions.Builder()
             .setServerURL(URL("https://meet.jit.si"))
-            .setWelcomePageEnabled(false)
             .setRoom(roomName)
             .build()
 
         JitsiMeetActivity.launch(this, options)
-    }
-
-    private fun hangUp() {
-        val hangupBroadcastIntent: Intent = BroadcastIntentHelper.buildHangUpIntent()
-        LocalBroadcastManager.getInstance(this).sendBroadcast(hangupBroadcastIntent)
     }
 
     private fun registerForBroadcastMessages() {
