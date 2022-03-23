@@ -7,22 +7,33 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/joinButton"
+        android:id="@+id/nativeJoinButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Join"
+        android:layout_marginTop="20dp"
+        android:text="Join room"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/conferenceName" />
+        app:layout_constraintTop_toBottomOf="@+id/roomNameEditTxt" />
+
+    <Button
+        android:id="@+id/webViewJoinButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Join using Web"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/nativeJoinButton" />
 
     <EditText
-        android:id="@+id/conferenceName"
+        android:id="@+id/roomNameEditTxt"
         android:layout_width="285dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="-40dp"
-        android:contentDescription="Enter conference name..."
+        android:contentDescription="Enter room name"
         android:ems="10"
+        android:hint="Enter room name"
         android:inputType="textPersonName"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
