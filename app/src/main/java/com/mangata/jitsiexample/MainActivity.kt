@@ -9,6 +9,7 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.mangata.jitsiexample.databinding.ActivityMainBinding
 import org.jitsi.meet.sdk.BroadcastEvent
 import org.jitsi.meet.sdk.JitsiMeetActivity
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions
@@ -16,6 +17,8 @@ import java.net.URL
 
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityMainBinding
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -25,30 +28,28 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        val joinButton = findViewById<Button>(R.id.nativeJoinButton)
-        val joinWebButton = findViewById<Button>(R.id.webViewJoinButton)
-        val roomName = findViewById<EditText>(R.id.roomNameEditTxt)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         registerForBroadcastMessages()
 
-        joinButton.setOnClickListener {
-            if (roomName.text.isNotEmpty()) {
-                //Native approach
-                startCall(roomName.text.toString())
-            } else {
-                roomName.error = "Enter room name!"
+        binding.apply {
+            nativeJoinButton.setOnClickListener {
+                if (roomNameEditTxt.text.isNotEmpty()) {
+                    //Native approach
+                    startCall(roomNameEditTxt.text.toString())
+                } else {
+                    roomNameEditTxt.error = "Enter room name!"
+                }
             }
-        }
 
-        joinWebButton.setOnClickListener {
-            if (roomName.text.isNotEmpty()) {
-                //WebView approach
-                //checkForAndAskForPermissions()
-                startWebView(roomName.text.toString())
-            } else {
-                roomName.error = "Enter room name!"
+            webViewJoinButton.setOnClickListener {
+                if (roomNameEditTxt.text.isNotEmpty()) {
+                    //WebView approach
+                    startWebView(roomNameEditTxt.text.toString())
+                } else {
+                    roomNameEditTxt.error = "Enter room name!"
+                }
             }
         }
     }
@@ -87,7 +88,6 @@ class MainActivity : AppCompatActivity() {
         intent?.let {
             val event = BroadcastEvent(it)
             when (event.type) {
-                BroadcastEvent.Type.AUDIO_MUTED_CHANGED -> println("Mute selected")
                 BroadcastEvent.Type.CONFERENCE_JOINED -> println("Conference Joined with url ${event.data["url"]}")
                 BroadcastEvent.Type.PARTICIPANT_JOINED -> println("Participant joined ${event.data["name"]}")
                 else -> return
