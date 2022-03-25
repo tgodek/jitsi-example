@@ -3,6 +3,9 @@ package com.mangata.jitsiexample
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.facebook.react.modules.core.PermissionListener
@@ -37,7 +40,8 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
         jitsiMeetView?.join(options)
 
-        //val parentWidth = binding.customFrameLayout.layoutParams.width
+        jitsiMeetView?.id = View.generateViewId()
+        jitsiMeetView?.layoutParams = ViewGroup.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
         videoView.addView(jitsiMeetView)
     }
 
