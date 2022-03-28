@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
 
         permissionLauncher =
             registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-
                 isCameraPermissionGranted =
                     permissions[Manifest.permission.CAMERA] ?: isCameraPermissionGranted
                 isMicrophonePermissionGranted =
@@ -48,12 +47,10 @@ class MainActivity : AppCompatActivity() {
                 if (validInput(roomNameEditTxt))
                     startNativeView(roomNameEditTxt.text.toString())
             }
-
             webViewJoinButton.setOnClickListener {
                 if (validInput(roomNameEditTxt))
                     startWebView(roomNameEditTxt.text.toString())
             }
-
             embededJoinButton.setOnClickListener {
                 if (validInput(roomNameEditTxt))
                     startEmbeddedView(roomNameEditTxt.text.toString())
@@ -109,7 +106,7 @@ class MainActivity : AppCompatActivity() {
 
         isMicrophonePermissionGranted = ContextCompat.checkSelfPermission(
             this,
-            Manifest.permission.CAMERA
+            Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
 
         if (!isCameraPermissionGranted) {
