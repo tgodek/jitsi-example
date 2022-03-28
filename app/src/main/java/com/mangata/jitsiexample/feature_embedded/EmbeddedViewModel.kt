@@ -12,9 +12,16 @@ class EmbeddedViewModel(
 
     private val roomName = handle.get<String>(Constants.ROOM_NAME)
 
-    fun setupConference(): JitsiMeetConferenceOptions = JitsiMeetConferenceOptions
-        .Builder()
-        .setServerURL(URL("https://meet.jit.si"))
-        .setRoom(roomName)
-        .build()
+    var conferenceJoined = false
+        private set
+
+    fun onConferenceJoinConfig(): JitsiMeetConferenceOptions {
+        println("roomName: $roomName")
+        conferenceJoined = true
+        return JitsiMeetConferenceOptions
+            .Builder()
+            .setServerURL(URL("https://meet.jit.si"))
+            .setRoom(roomName)
+            .build()
+    }
 }
