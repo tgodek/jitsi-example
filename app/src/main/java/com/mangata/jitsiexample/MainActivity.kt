@@ -13,6 +13,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.mangata.jitsiexample.databinding.ActivityMainBinding
+import com.mangata.jitsiexample.feature_embedded.EmbeddedActivity
+import com.mangata.jitsiexample.feature_webview.WebViewActivity
+import com.mangata.jitsiexample.util.Constants
 import org.jitsi.meet.sdk.BroadcastEvent
 import org.jitsi.meet.sdk.JitsiMeetActivity
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions
@@ -89,7 +92,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startWebView(roomName: String) {
         val intent = Intent(this, WebViewActivity::class.java).apply {
-            putExtra("ROOM_NAME", roomName)
+            putExtra(Constants.ROOM_NAME, roomName)
         }
         startActivity(intent)
     }
