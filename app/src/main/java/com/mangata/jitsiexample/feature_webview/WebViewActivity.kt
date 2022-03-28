@@ -1,8 +1,10 @@
-package com.mangata.jitsiexample
+package com.mangata.jitsiexample.feature_webview
 
 import android.os.Bundle
 import android.webkit.*
 import androidx.appcompat.app.AppCompatActivity
+import com.mangata.jitsiexample.R
+import com.mangata.jitsiexample.util.Constants
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions
 import java.net.URL
 
@@ -16,7 +18,7 @@ class WebViewActivity : AppCompatActivity() {
         setContentView(R.layout.activity_web_view)
         webView = findViewById(R.id.liveMeetWebView)
 
-        val roomName = intent.getStringExtra("ROOM_NAME")
+        val roomName = intent.getStringExtra(Constants.ROOM_NAME)
 
         val options = JitsiMeetConferenceOptions.Builder()
             .setServerURL(URL("https://meet.jit.si"))
