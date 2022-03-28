@@ -1,39 +1,31 @@
 package com.mangata.jitsiexample
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.widget.EditText
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.mangata.jitsiexample.databinding.ActivityMainBinding
 import com.mangata.jitsiexample.feature_embedded.EmbeddedActivity
 import com.mangata.jitsiexample.feature_webview.WebViewActivity
 import com.mangata.jitsiexample.util.Constants
-import org.jitsi.meet.sdk.BroadcastEvent
 import org.jitsi.meet.sdk.JitsiMeetActivity
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions
 import java.net.URL
 
-
+@RequiresApi(Build.VERSION_CODES.R)
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
     private var isCameraPermissionGranted = false
     private var isMicrophonePermissionGranted = false
-
-    private val broadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            onBroadcastReceived(intent)
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,44 +42,23 @@ class MainActivity : AppCompatActivity() {
             }
 
         checkForAndAskForPermissions()
-        registerForBroadcastMessages()
 
         binding.apply {
             nativeJoinButton.setOnClickListener {
-                if (roomNameEditTxt.text.isNotEmpty()) {
-                    startCall(roomNameEditTxt.text.toString())
-                } else {
-                    roomNameEditTxt.error = "Enter room name!"
-                }
+                if (validInput(roomNameEditTxt))
+                    startNativeView(roomNameEditTxt.text.toString())
             }
 
             webViewJoinButton.setOnClickListener {
-                if (roomNameEditTxt.text.isNotEmpty()) {
-                    if(permissionsGranted())
-                        startWebView(roomNameEditTxt.text.toString())
-                    else
-                        checkForAndAskForPermissions()
-                } else {
-                    roomNameEditTxt.error = "Enter room name!"
-                }
+                if (validInput(roomNameEditTxt))
+                    startWebView(roomNameEditTxt.text.toString())
             }
 
             embededJoinButton.setOnClickListener {
-                if (roomNameEditTxt.text.isNotEmpty()) {
-                    if(permissionsGranted())
-                        startEmbeddedView(roomNameEditTxt.text.toString())
-                    else
-                        checkForAndAskForPermissions()
-                } else {
-                    roomNameEditTxt.error = "Enter room name!"
-                }
+                if (validInput(roomNameEditTxt))
+                    startEmbeddedView(roomNameEditTxt.text.toString())
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver)
     }
 
     private fun startWebView(roomName: String) {
@@ -99,12 +70,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun startEmbeddedView(roomName: String) {
         val intent = Intent(this, EmbeddedActivity::class.java).apply {
-            putExtra("ROOM_NAME", roomName)
+            putExtra(Constants.ROOM_NAME, roomName)
         }
         startActivity(intent)
     }
 
-    private fun startCall(roomName: String) {
+    private fun startNativeView(roomName: String) {
         val options = JitsiMeetConferenceOptions.Builder()
             .setServerURL(URL("https://meet.jit.si"))
             .setRoom(roomName)
@@ -113,27 +84,20 @@ class MainActivity : AppCompatActivity() {
         JitsiMeetActivity.launch(this, options)
     }
 
-    private fun registerForBroadcastMessages() {
-        val intentFilter = IntentFilter()
-
-        for (type in BroadcastEvent.Type.values()) {
-            intentFilter.addAction(type.action)
+    private fun validInput(roomName: EditText): Boolean {
+        if (roomName.text.isEmpty()) {
+            roomName.error = "Enter room name!"
+            return false
         }
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter)
+        if (!permissionsGranted()) {
+            checkForAndAskForPermissions()
+            return false
+        }
+        return true
     }
 
-    private fun onBroadcastReceived(intent: Intent?) {
-        intent?.let {
-            val event = BroadcastEvent(it)
-            when (event.type) {
-                BroadcastEvent.Type.CONFERENCE_JOINED -> println("Conference Joined with url ${event.data["url"]}")
-                BroadcastEvent.Type.PARTICIPANT_JOINED -> println("Participant joined ${event.data["name"]}")
-                else -> return
-            }
-        }
-    }
-
-    private fun permissionsGranted() : Boolean = isMicrophonePermissionGranted && isCameraPermissionGranted
+    private fun permissionsGranted(): Boolean =
+        isMicrophonePermissionGranted && isCameraPermissionGranted
 
     private fun checkForAndAskForPermissions() {
         val permissionRequest: MutableList<String> = ArrayList()
