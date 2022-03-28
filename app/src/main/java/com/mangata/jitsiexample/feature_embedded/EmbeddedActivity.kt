@@ -1,19 +1,25 @@
 package com.mangata.jitsiexample.feature_embedded
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.widget.FrameLayout
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.doOnPreDraw
 import com.facebook.react.modules.core.PermissionListener
 import com.mangata.jitsiexample.databinding.ActivityEmbeddedBinding
+import com.mangata.jitsiexample.util.navigationBarHeight
 import org.jitsi.meet.sdk.JitsiMeetActivityDelegate
 import org.jitsi.meet.sdk.JitsiMeetActivityInterface
 import org.jitsi.meet.sdk.JitsiMeetView
 import org.koin.androidx.viewmodel.ext.android.stateViewModel
 
-
+@RequiresApi(Build.VERSION_CODES.R)
 class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
     private val viewModel: EmbeddedViewModel by stateViewModel(state = { Bundle(intent.extras) })
@@ -22,28 +28,46 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        supportActionBar?.hide()
         binding = ActivityEmbeddedBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         val videoView = binding.customFrameLayout
         jitsiMeetView = JitsiMeetView(this)
 
-        jitsiMeetView?.join(viewModel.setupConference())
-
         // If the calculated height of the Frame Layout is less than 900dp
-        // we need to force the layout to 900dp else the video call options won't show
+        // we need to force the layout height to at least 900dp else the video call options won't show
+        setupVideoFrame(videoView)
+
+        if (!viewModel.conferenceJoined)
+            jitsiMeetView?.join(viewModel.onConferenceJoinConfig())
+    }
+
+
+    private fun setupVideoFrame(videoView: FrameLayout) {
         videoView.doOnPreDraw {
-            var videoHeight = videoView.height
-            val videoWidth = videoView.width
-            if (videoHeight < 900)
+            val rootWidth = resources.displayMetrics.widthPixels
+            val rootHeight = resources.displayMetrics.heightPixels
+            var videoHeight = it.height
+            var videoWidth = it.width
+            val orientation = resources.configuration.orientation
+
+            if (videoHeight < 900 && orientation == Configuration.ORIENTATION_PORTRAIT)
                 videoHeight = 900
 
-            videoView.layoutParams.height = videoHeight
-            videoView.layoutParams.width = videoWidth
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                videoWidth = rootWidth + navigationBarHeight
+                videoHeight = rootHeight
+            }
+
+            it.apply {
+                layoutParams.height = videoHeight
+                layoutParams.width = videoWidth
+            }
             videoView.addView(jitsiMeetView, videoWidth, videoHeight)
         }
-
     }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -93,5 +117,4 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         jitsiMeetView = null
         JitsiMeetActivityDelegate.onHostDestroy(this)
     }
-
 }
