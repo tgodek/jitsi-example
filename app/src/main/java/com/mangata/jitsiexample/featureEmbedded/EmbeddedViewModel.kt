@@ -1,4 +1,4 @@
-package com.mangata.jitsiexample.feature_embedded
+package com.mangata.jitsiexample.featureEmbedded
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -16,7 +16,6 @@ class EmbeddedViewModel(
         private set
 
     fun onConferenceJoinConfig(): JitsiMeetConferenceOptions {
-        println("roomName: $roomName")
         conferenceJoined = true
         return JitsiMeetConferenceOptions
             .Builder()

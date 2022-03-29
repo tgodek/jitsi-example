@@ -12,8 +12,8 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.mangata.jitsiexample.databinding.ActivityMainBinding
-import com.mangata.jitsiexample.feature_embedded.EmbeddedActivity
-import com.mangata.jitsiexample.feature_webview.WebViewActivity
+import com.mangata.jitsiexample.featureEmbedded.EmbeddedActivity
+import com.mangata.jitsiexample.featureWebView.WebViewActivity
 import com.mangata.jitsiexample.util.Constants
 import org.jitsi.meet.sdk.JitsiMeetActivity
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions

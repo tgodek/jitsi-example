@@ -1,4 +1,4 @@
-package com.mangata.jitsiexample.feature_webview
+package com.mangata.jitsiexample.featureWebView
 
 import android.os.Bundle
 import android.webkit.*
