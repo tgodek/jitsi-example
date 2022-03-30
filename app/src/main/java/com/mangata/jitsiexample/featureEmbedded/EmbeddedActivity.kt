@@ -1,32 +1,42 @@
 package com.mangata.jitsiexample.featureEmbedded
 
 import android.Manifest
+import android.content.*
 import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.doOnPreDraw
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.navArgs
+import androidx.navigation.ui.onNavDestinationSelected
+import androidx.navigation.ui.setupActionBarWithNavController
 import com.facebook.react.modules.core.PermissionListener
+import com.mangata.jitsiexample.R
 import com.mangata.jitsiexample.databinding.ActivityEmbeddedBinding
 import com.mangata.jitsiexample.util.navigationBarHeight
 import org.jitsi.meet.sdk.*
-import org.koin.androidx.viewmodel.ext.android.stateViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @RequiresApi(Build.VERSION_CODES.R)
 class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
-    private val viewModel: EmbeddedViewModel by stateViewModel(state = { Bundle(intent.extras) })
     private lateinit var binding: ActivityEmbeddedBinding
+    private val args: EmbeddedActivityArgs by navArgs()
+    private val viewModel: EmbeddedViewModel by viewModel()
     private var jitsiMeetView: JitsiMeetView? = null
+    private lateinit var options: JitsiMeetConferenceOptions
     private var portraitScreenWidth: Int? = null
     private var portraitScreenHeight: Int? = null
     private var portraitFrameHeight: Int? = null
@@ -39,24 +49,47 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        supportActionBar?.hide()
         binding = ActivityEmbeddedBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        setSupportActionBar(binding.toolbar)
+        binding.toolbar.setNavigationIcon(R.drawable.ic_back)
 
         val videoView = binding.frameLayout
         jitsiMeetView = JitsiMeetView(this)
 
+        if (!viewModel.conferenceJoined)
+            jitsiMeetView?.join(viewModel.onConferenceJoinConfig(args.roomName))
+
         registerForBroadcastMessages()
 
-        /**
+         /**
          * If the calculated height of the Frame Layout is less than 900dp
          * we need to force the layout height to at least 900dp else the video call options won't show
          */
         setupVideoFrame(videoView)
 
-        if (!viewModel.conferenceJoined) {
-            jitsiMeetView?.join(viewModel.onConferenceJoinConfig())
+        binding.toolbar.setNavigationOnClickListener {
+            if (!viewModel.conferenceTerminated) {
+                showAlertDialog()
+            }
+            else {
+                finish()
+            }
         }
+    }
+
+    private fun showAlertDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Leave Meeting")
+            .setMessage("Are you sure you want to leave this meeting?")
+            .setPositiveButton(R.string.alert_dialog_positive) { dialog, which ->
+                hangUp()
+                dialog.dismiss()
+                finish()
+            }
+            .setNegativeButton(R.string.alert_dialog_negative, null)
+            .show()
     }
 
     private fun setupVideoFrame(videoView: FrameLayout) {
@@ -94,6 +127,7 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         val orientation = newConfig.orientation
 
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            binding.toolbar.visibility = View.GONE
             binding.frameLayout.layoutParams.width = portraitScreenHeight!!
             binding.frameLayout.layoutParams.height = portraitScreenWidth!!
 
@@ -102,6 +136,7 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         }
 
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            binding.toolbar.visibility = View.VISIBLE
             binding.frameLayout.layoutParams.width = portraitScreenWidth!!
             binding.frameLayout.layoutParams?.height = portraitFrameHeight!!
 
@@ -125,6 +160,11 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
             arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO),
             p1
         )
+    }
+
+    private fun hangUp() {
+        val hangupBroadcastIntent: Intent = BroadcastIntentHelper.buildHangUpIntent()
+        LocalBroadcastManager.getInstance(this).sendBroadcast(hangupBroadcastIntent)
     }
 
     override fun onResume() {
@@ -172,8 +212,23 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         intent?.let {
             val event = BroadcastEvent(it)
             when (event.type) {
-                BroadcastEvent.Type.CONFERENCE_JOINED -> println("Conference Joined with url ${event.data["url"]}")
-                BroadcastEvent.Type.PARTICIPANT_JOINED -> println("Participant joined ${event.data["name"]}")
+                BroadcastEvent.Type.CONFERENCE_JOINED -> {
+                    viewModel.onEvent(EmbeddedActivityEvents.ConferenceJoined)
+                }
+                BroadcastEvent.Type.CONFERENCE_TERMINATED -> {
+                    viewModel.onEvent(EmbeddedActivityEvents.ConferenceTerminated)
+                }
+                BroadcastEvent.Type.CONFERENCE_WILL_JOIN -> println("JitsiEvent3")
+                BroadcastEvent.Type.AUDIO_MUTED_CHANGED -> println("JitsiEvent4")
+                BroadcastEvent.Type.PARTICIPANT_JOINED -> println("JitsiEvent5")
+                BroadcastEvent.Type.PARTICIPANT_LEFT -> println("JitsiEvent6")
+                BroadcastEvent.Type.ENDPOINT_TEXT_MESSAGE_RECEIVED -> println("JitsiEvent7")
+                BroadcastEvent.Type.SCREEN_SHARE_TOGGLED -> println("JitsiEvent8")
+                BroadcastEvent.Type.PARTICIPANTS_INFO_RETRIEVED -> println("JitsiEvent9")
+                BroadcastEvent.Type.CHAT_MESSAGE_RECEIVED -> println("JitsiEvent10")
+                BroadcastEvent.Type.CHAT_TOGGLED -> println("JitsiEvent11")
+                BroadcastEvent.Type.VIDEO_MUTED_CHANGED -> println("JitsiEvent12")
+                BroadcastEvent.Type.READY_TO_CLOSE -> println("JitsiEvent13")
                 else -> return
             }
         }

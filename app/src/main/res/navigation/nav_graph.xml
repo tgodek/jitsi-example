@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.mangata.jitsiexample.ui.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_homeFragment_to_webViewFragment"
+            app:destination="@id/webViewFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_embeddedActivity"
+            app:destination="@id/embeddedActivity" />
+    </fragment>
+    <fragment
+        android:id="@+id/webViewFragment"
+        android:name="com.mangata.jitsiexample.featureWebView.WebViewFragment"
+        android:label="fragment_web_view"
+        tools:layout="@layout/fragment_web_view" >
+        <argument
+            android:name="roomName"
+            app:argType="string" />
+    </fragment>
+    <activity
+        android:id="@+id/embeddedActivity"
+        android:name="com.mangata.jitsiexample.featureEmbedded.EmbeddedActivity"
+        android:label="Konzultacije"
+        tools:layout="@layout/activity_embedded" >
+        <argument
+            android:name="roomName"
+            app:argType="string" />
+    </activity>
+</navigation>

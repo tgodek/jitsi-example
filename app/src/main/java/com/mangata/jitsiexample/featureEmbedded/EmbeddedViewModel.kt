@@ -1,26 +1,41 @@
 package com.mangata.jitsiexample.featureEmbedded
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.mangata.jitsiexample.util.Constants
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions
 import java.net.URL
 
-class EmbeddedViewModel(
-    handle: SavedStateHandle
-) : ViewModel() {
-
-    private val roomName = handle.get<String>(Constants.ROOM_NAME)
+class EmbeddedViewModel : ViewModel() {
 
     var conferenceJoined = false
         private set
 
-    fun onConferenceJoinConfig(): JitsiMeetConferenceOptions {
-        conferenceJoined = true
+    var conferenceTerminated = false
+        private set
+
+    fun onConferenceJoinConfig(roomName: String): JitsiMeetConferenceOptions {
         return JitsiMeetConferenceOptions
             .Builder()
             .setServerURL(URL("https://meet.jit.si"))
             .setRoom(roomName)
+            .setFeatureFlag("call-integration.enabled", false)
             .build()
     }
+
+    fun onEvent(event: EmbeddedActivityEvents) {
+        when (event) {
+            EmbeddedActivityEvents.ConferenceJoined -> {
+                println("Conference Joined")
+                conferenceJoined = true
+            }
+            EmbeddedActivityEvents.ConferenceTerminated -> {
+                println("Conference Terminated")
+                conferenceTerminated = true
+            }
+        }
+    }
+}
+
+sealed class EmbeddedActivityEvents {
+    object ConferenceJoined : EmbeddedActivityEvents()
+    object ConferenceTerminated : EmbeddedActivityEvents()
 }

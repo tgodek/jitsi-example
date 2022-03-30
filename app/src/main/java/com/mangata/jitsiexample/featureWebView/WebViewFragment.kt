@@ -1,24 +1,43 @@
 package com.mangata.jitsiexample.featureWebView
 
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.webkit.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import com.facebook.react.bridge.UiThreadUtil.runOnUiThread
 import com.mangata.jitsiexample.R
+import com.mangata.jitsiexample.databinding.FragmentWebViewBinding
 import com.mangata.jitsiexample.util.Constants
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions
 import java.net.URL
 
-class WebViewActivity : AppCompatActivity() {
+class WebViewFragment : Fragment() {
 
-    private lateinit var webView: WebView
+    private var _binding: FragmentWebViewBinding? = null
+    private val binding get() = _binding!!
+    private val args: WebViewFragmentArgs by navArgs()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        supportActionBar?.hide()
-        setContentView(R.layout.activity_web_view)
-        webView = findViewById(R.id.liveMeetWebView)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentWebViewBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        val roomName = intent.getStringExtra(Constants.ROOM_NAME)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val binding = FragmentWebViewBinding.bind(view)
+        val webView = binding.liveMeetWebView
+
+        val roomName = args.roomName
 
         val options = JitsiMeetConferenceOptions.Builder()
             .setServerURL(URL("https://meet.jit.si"))
@@ -38,8 +57,7 @@ class WebViewActivity : AppCompatActivity() {
                 view: WebView?,
                 request: WebResourceRequest?
             ): Boolean {
-                finish()
-                return true
+                return findNavController().popBackStack()
             }
         }
 
@@ -55,12 +73,9 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        /**
-         * When the application falls into the background we want to stop the media stream
-         * such that the camera is free to use by other apps.
-         */
-        webView.evaluateJavascript("if(window.localStream){window.localStream.stop();}", null)
+    override fun onDestroyView() {
+        super.onDestroyView()
+        binding.liveMeetWebView.evaluateJavascript("if(window.localStream){window.localStream.stop();}", null)
+        _binding = null
     }
 }

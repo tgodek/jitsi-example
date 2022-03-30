@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Jitsi Example</string>
+    <string name="alert_dialog_positive">Yes</string>
+    <string name="alert_dialog_negative">No</string>
 </resources>
