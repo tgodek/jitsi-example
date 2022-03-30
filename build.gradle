@@ -1,8 +1,48 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-plugins {
-    id 'com.android.application' version '7.1.2' apply false
-    id 'com.android.library' version '7.1.2' apply false
-    id 'org.jetbrains.kotlin.android' version '1.6.10' apply false
+buildscript {
+    ext.kotlinVersion = '1.6.10'
+    ext.navigationVersion = '2.4.1'
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$navigationVersion"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()
+        maven {
+            url "https://github.com/jitsi/jitsi-maven-repository/raw/master/releases"
+        }
+    }
+}
+
+ext {
+    // Sdk and tools
+    minSdkVersion = 23
+    targetSdkVersion = 31
+    compileSdkVersion = 31
+
+    // App dependencies
+    coreKtxVersion = '1.7.0'
+    appCompatVerison = '1.4.1'
+    materialversion = '1.5.0'
+    constraintlayoutVersion = '2.1.3'
+    activityKtxVersion = '1.4.0'
+    jitsiMeetVersion = '4.1.0'
+    koinVersion = '3.2.0-beta-1'
+
+    //test
+    junitVersion = '4.13.2'
+    androidJunitVersion = '1.1.3'
+    androidEspressoVersion = '3.4.0'
 }
 
 task clean(type: Delete) {
