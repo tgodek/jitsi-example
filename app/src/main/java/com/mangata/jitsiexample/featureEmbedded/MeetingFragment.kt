@@ -7,22 +7,26 @@ import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat.Type.systemBars
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.mangata.jitsiexample.R
 import com.mangata.jitsiexample.databinding.FragmentMeetingBinding
 import com.mangata.jitsiexample.util.navigationBarHeight
+import org.devio.rn.splashscreen.SplashScreen.hide
 import org.jitsi.meet.sdk.BroadcastEvent
 import org.jitsi.meet.sdk.BroadcastIntentHelper
 import org.jitsi.meet.sdk.JitsiMeetView
@@ -40,6 +44,7 @@ class MeetingFragment : Fragment(R.layout.fragment_meeting) {
     private var portraitScreenHeight: Int? = null
     private var portraitFrameHeight: Int? = null
     private lateinit var toolbar: Toolbar
+    private lateinit var bottomNavBar: BottomNavigationView
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -62,6 +67,7 @@ class MeetingFragment : Fragment(R.layout.fragment_meeting) {
         val videoView = binding.frameLayout
         jitsiMeetView = JitsiMeetView(requireActivity())
         toolbar = requireActivity().findViewById(R.id.toolbar)
+        bottomNavBar = requireActivity().findViewById(R.id.bottom_nav)
 
         toolbar.setNavigationOnClickListener {
            onBackPressed()
@@ -180,7 +186,7 @@ class MeetingFragment : Fragment(R.layout.fragment_meeting) {
                 }
                 BroadcastEvent.Type.CONFERENCE_TERMINATED -> {
                     viewModel.onEvent(EmbeddedActivityEvents.ConferenceTerminated)
-                }
+                   }
                 BroadcastEvent.Type.CONFERENCE_WILL_JOIN -> println("JitsiEvent3")
                 BroadcastEvent.Type.AUDIO_MUTED_CHANGED -> println("JitsiEvent4")
                 BroadcastEvent.Type.PARTICIPANT_JOINED -> println("JitsiEvent5")

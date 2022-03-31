@@ -1,4 +1,4 @@
-package com.mangata.jitsiexample.ui
+package com.mangata.jitsiexample.ui.home
 
 import android.Manifest
 import android.content.pm.PackageManager
