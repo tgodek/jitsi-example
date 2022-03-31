@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import org.jitsi.meet.sdk.JitsiMeetConferenceOptions
 import java.net.URL
 
-class EmbeddedViewModel : ViewModel() {
+class MeetingViewModel : ViewModel() {
 
     var conferenceJoined = false
         private set

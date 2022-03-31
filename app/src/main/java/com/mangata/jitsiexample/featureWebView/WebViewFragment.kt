@@ -33,10 +33,7 @@ class WebViewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val binding = FragmentWebViewBinding.bind(view)
         val webView = binding.liveMeetWebView
-
         val roomName = args.roomName
 
         val options = JitsiMeetConferenceOptions.Builder()

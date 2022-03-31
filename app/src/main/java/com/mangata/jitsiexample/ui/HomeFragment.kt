@@ -59,7 +59,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun startEmbeddedView(roomName: String) {
-       val action = HomeFragmentDirections.actionHomeFragmentToEmbeddedActivity(roomName)
+        val action = HomeFragmentDirections.actionHomeFragmentToMeetingFragment(roomName)
         findNavController().navigate(action)
     }
 
@@ -106,7 +106,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         if (!isMicrophonePermissionGranted) {
             permissionRequest.add(Manifest.permission.RECORD_AUDIO)
         }
-
         if (permissionRequest.isNotEmpty()) {
             permissionLauncher.launch(permissionRequest.toTypedArray())
         }

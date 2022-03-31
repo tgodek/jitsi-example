@@ -1,45 +1,45 @@
 package com.mangata.jitsiexample.featureEmbedded
 
-import android.Manifest
-import android.content.*
 import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.doOnPreDraw
+import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.navArgs
-import androidx.navigation.ui.onNavDestinationSelected
-import androidx.navigation.ui.setupActionBarWithNavController
-import com.facebook.react.modules.core.PermissionListener
+import androidx.navigation.fragment.navArgs
 import com.mangata.jitsiexample.R
-import com.mangata.jitsiexample.databinding.ActivityEmbeddedBinding
+import com.mangata.jitsiexample.databinding.FragmentMeetingBinding
 import com.mangata.jitsiexample.util.navigationBarHeight
-import org.jitsi.meet.sdk.*
+import org.jitsi.meet.sdk.BroadcastEvent
+import org.jitsi.meet.sdk.BroadcastIntentHelper
+import org.jitsi.meet.sdk.JitsiMeetView
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 @RequiresApi(Build.VERSION_CODES.R)
-class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
+class MeetingFragment : Fragment(R.layout.fragment_meeting) {
 
-    private lateinit var binding: ActivityEmbeddedBinding
-    private val args: EmbeddedActivityArgs by navArgs()
-    private val viewModel: EmbeddedViewModel by viewModel()
+    private var _binding: FragmentMeetingBinding? = null
+    private val binding get() = _binding!!
+    private val args: MeetingFragmentArgs by navArgs()
+    private val viewModel: MeetingViewModel by viewModel()
     private var jitsiMeetView: JitsiMeetView? = null
-    private lateinit var options: JitsiMeetConferenceOptions
     private var portraitScreenWidth: Int? = null
     private var portraitScreenHeight: Int? = null
     private var portraitFrameHeight: Int? = null
+    private lateinit var toolbar: Toolbar
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -47,46 +47,58 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityEmbeddedBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentMeetingBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        setSupportActionBar(binding.toolbar)
-        binding.toolbar.setNavigationIcon(R.drawable.ic_back)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         val videoView = binding.frameLayout
-        jitsiMeetView = JitsiMeetView(this)
+        jitsiMeetView = JitsiMeetView(requireActivity())
+        toolbar = requireActivity().findViewById(R.id.toolbar)
+
+        toolbar.setNavigationOnClickListener {
+           onBackPressed()
+        }
+
+        val onBackPressed = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = onBackPressed()
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, onBackPressed)
 
         if (!viewModel.conferenceJoined)
             jitsiMeetView?.join(viewModel.onConferenceJoinConfig(args.roomName))
 
         registerForBroadcastMessages()
 
-         /**
+        /**
          * If the calculated height of the Frame Layout is less than 900dp
          * we need to force the layout height to at least 900dp else the video call options won't show
          */
         setupVideoFrame(videoView)
+    }
 
-        binding.toolbar.setNavigationOnClickListener {
-            if (!viewModel.conferenceTerminated) {
-                showAlertDialog()
-            }
-            else {
-                finish()
-            }
+    private fun onBackPressed() {
+        when {
+            !viewModel.conferenceTerminated -> showAlertDialog()
+            else ->  findNavController().navigate(MeetingFragmentDirections.actionMeetingFragmentToHomeFragment())
         }
     }
 
     private fun showAlertDialog() {
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(requireContext())
             .setTitle("Leave Meeting")
             .setMessage("Are you sure you want to leave this meeting?")
-            .setPositiveButton(R.string.alert_dialog_positive) { dialog, which ->
+            .setPositiveButton(R.string.alert_dialog_positive) { dialog, _ ->
                 hangUp()
                 dialog.dismiss()
-                finish()
+                findNavController().navigate(MeetingFragmentDirections.actionMeetingFragmentToHomeFragment())
             }
             .setNegativeButton(R.string.alert_dialog_negative, null)
             .show()
@@ -105,12 +117,12 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
                 videoHeight = 900
 
                 portraitScreenWidth = rootWidth
-                portraitScreenHeight = rootHeight + navigationBarHeight
+                portraitScreenHeight = rootHeight + requireActivity().navigationBarHeight
                 portraitFrameHeight = videoHeight
             }
 
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                videoWidth = rootWidth + navigationBarHeight
+                videoWidth = rootWidth + requireActivity().navigationBarHeight
                 videoHeight = rootHeight
             }
 
@@ -127,7 +139,7 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         val orientation = newConfig.orientation
 
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            binding.toolbar.visibility = View.GONE
+            toolbar.visibility = View.GONE
             binding.frameLayout.layoutParams.width = portraitScreenHeight!!
             binding.frameLayout.layoutParams.height = portraitScreenWidth!!
 
@@ -136,7 +148,7 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         }
 
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            binding.toolbar.visibility = View.VISIBLE
+            toolbar.visibility = View.VISIBLE
             binding.frameLayout.layoutParams.width = portraitScreenWidth!!
             binding.frameLayout.layoutParams?.height = portraitFrameHeight!!
 
@@ -145,58 +157,9 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        JitsiMeetActivityDelegate.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    override fun requestPermissions(p0: Array<out String>?, p1: Int, p2: PermissionListener?) {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO),
-            p1
-        )
-    }
-
     private fun hangUp() {
         val hangupBroadcastIntent: Intent = BroadcastIntentHelper.buildHangUpIntent()
-        LocalBroadcastManager.getInstance(this).sendBroadcast(hangupBroadcastIntent)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        JitsiMeetActivityDelegate.onHostResume(this)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        JitsiMeetActivityDelegate.onHostPause(this)
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        JitsiMeetActivityDelegate.onBackPressed()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        JitsiMeetActivityDelegate.onActivityResult(this, requestCode, resultCode, data)
-    }
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        JitsiMeetActivityDelegate.onNewIntent(intent)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        jitsiMeetView?.dispose()
-        jitsiMeetView = null
-        JitsiMeetActivityDelegate.onHostDestroy(this)
+        LocalBroadcastManager.getInstance(requireContext()).sendBroadcast(hangupBroadcastIntent)
     }
 
     private fun registerForBroadcastMessages() {
@@ -205,7 +168,7 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         for (type in BroadcastEvent.Type.values()) {
             intentFilter.addAction(type.action)
         }
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, intentFilter)
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(broadcastReceiver, intentFilter)
     }
 
     private fun onBroadcastReceived(intent: Intent?) {
@@ -232,5 +195,12 @@ class EmbeddedActivity : AppCompatActivity(), JitsiMeetActivityInterface {
                 else -> return
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        jitsiMeetView?.dispose()
+        jitsiMeetView = null
+        _binding = null
     }
 }
