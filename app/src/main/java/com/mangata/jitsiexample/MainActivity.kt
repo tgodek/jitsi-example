@@ -3,6 +3,7 @@ package com.mangata.jitsiexample
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
@@ -29,7 +30,19 @@ class MainActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
         setSupportActionBar(binding.toolbar)
         setupActionBarWithNavController(navController)
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            when (destination.id) {
+                R.id.meetingFragment -> {
+                    binding.toolbar.visibility = View.VISIBLE
+                }
+                else -> binding.toolbar.visibility = View.GONE
+            }
+        }
+
     }
+
+
 
     override fun onSupportNavigateUp(): Boolean {
         return navController.navigateUp() || super.onSupportNavigateUp()
