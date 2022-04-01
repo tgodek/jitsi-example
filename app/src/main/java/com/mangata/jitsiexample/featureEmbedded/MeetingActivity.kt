@@ -33,8 +33,6 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
     private val args: MeetingActivityArgs by navArgs()
 
     private var jitsiMeetView: JitsiMeetView? = null
-    private var portraitScreenWidth: Int = 0
-    private var portraitScreenHeight: Int = 0
     private var portraitFrameHeight: Int = 0
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -103,13 +101,11 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
             if (videoHeight < 900 && orientation == Configuration.ORIENTATION_PORTRAIT) {
                 videoHeight = 900
-
-                portraitScreenWidth = rootWidth
-                portraitScreenHeight = rootHeight + navigationBarHeight
                 portraitFrameHeight = videoHeight
             }
 
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                binding.toolbar.visibility = View.GONE
                 videoWidth = rootWidth + navigationBarHeight
                 videoHeight = rootHeight
             }
@@ -128,8 +124,8 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             binding.toolbar.visibility = View.GONE
-            binding.frameLayout.layoutParams.width = portraitScreenHeight
-            binding.frameLayout.layoutParams.height = portraitScreenWidth
+            binding.frameLayout.layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT
+            binding.frameLayout.layoutParams.height = FrameLayout.LayoutParams.MATCH_PARENT
 
             jitsiMeetView?.layoutParams?.width = FrameLayout.LayoutParams.MATCH_PARENT
             jitsiMeetView?.layoutParams?.height = FrameLayout.LayoutParams.MATCH_PARENT
@@ -137,8 +133,8 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             binding.toolbar.visibility = View.VISIBLE
-            binding.frameLayout.layoutParams.width = portraitScreenWidth
-            binding.frameLayout.layoutParams?.height = portraitFrameHeight
+            binding.frameLayout.layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT
+            binding.frameLayout.layoutParams?.height = if(portraitFrameHeight >= 900) portraitFrameHeight else 900
 
             jitsiMeetView?.layoutParams?.width = FrameLayout.LayoutParams.MATCH_PARENT
             jitsiMeetView?.layoutParams?.height = FrameLayout.LayoutParams.MATCH_PARENT
