@@ -14,8 +14,12 @@
             android:id="@+id/action_homeFragment_to_webViewFragment"
             app:destination="@id/webViewFragment" />
         <action
-            android:id="@+id/action_homeFragment_to_meetingFragment"
-            app:destination="@id/meetingFragment" />
+            android:id="@+id/action_homeFragment_to_meetingActivity"
+            app:destination="@id/meetingActivity">
+            <argument
+                android:name="roomName"
+                app:argType="string" />
+        </action>
     </fragment>
 
     <fragment
@@ -28,18 +32,6 @@
             app:argType="string" />
     </fragment>
     <fragment
-        android:id="@+id/meetingFragment"
-        android:name="com.mangata.jitsiexample.featureEmbedded.MeetingFragment"
-        android:label="Konzultacije"
-        tools:layout="@layout/fragment_meeting" >
-        <argument android:name="roomName" />
-        <action
-            android:id="@+id/action_meetingFragment_to_homeFragment"
-            app:destination="@id/homeFragment"
-            app:popUpTo="@id/homeFragment"
-            app:popUpToInclusive="true" />
-    </fragment>
-    <fragment
         android:id="@+id/doctorFragment"
         android:name="com.mangata.jitsiexample.ui.doctor.DoctorFragment"
         android:label="fragment_doctor"
@@ -49,5 +41,14 @@
         android:name="com.mangata.jitsiexample.ui.settings.SettingsFragment"
         android:label="fragment_settings"
         tools:layout="@layout/fragment_settings" />
+    <activity
+        android:id="@+id/meetingActivity"
+        android:name="com.mangata.jitsiexample.featureEmbedded.MeetingActivity"
+        android:label="activity_meeting"
+        tools:layout="@layout/activity_meeting" >
+        <argument
+            android:name="roomName"
+            app:argType="string" />
+    </activity>
 
 </navigation>

@@ -26,7 +26,6 @@
         android:theme="@style/Theme.JitsiExample">
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|screenSize|screenLayout"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,6 +33,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".featureEmbedded.MeetingActivity"
+            android:configChanges="orientation|screenSize|screenLayout" />
+
     </application>
 
 </manifest>

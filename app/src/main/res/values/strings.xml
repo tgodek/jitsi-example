@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Jitsi Example</string>
-    <string name="alert_dialog_positive">Yes</string>
-    <string name="alert_dialog_negative">No</string>
+    <string name="alert_dialog_positive">Da</string>
+    <string name="alert_dialog_negative">Ne</string>
+    <string name="toolbar_title">Konzultacije</string>
+    <string name="alert_title">Napuštanje sastanka</string>
+    <string name="alert_message">Da li ste sigurni da želite napustiti sastanak?</string>
 </resources>
