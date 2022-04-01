@@ -59,7 +59,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun startEmbeddedView(roomName: String) {
-        val action = HomeFragmentDirections.actionHomeFragmentToMeetingFragment(roomName)
+        val action = HomeFragmentDirections.actionHomeFragmentToMeetingActivity(roomName)
         findNavController().navigate(action)
     }
 
