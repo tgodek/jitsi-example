@@ -8,9 +8,9 @@ import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.view.*
 import android.widget.FrameLayout
+import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +21,7 @@ import androidx.navigation.navArgs
 import com.facebook.react.modules.core.PermissionListener
 import com.mangata.jitsiexample.R
 import com.mangata.jitsiexample.databinding.ActivityMeetingBinding
+import com.mangata.jitsiexample.util.getJitsiView
 import com.mangata.jitsiexample.util.navigationBarHeight
 import org.jitsi.meet.sdk.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -46,9 +47,10 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         binding = ActivityMeetingBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        jitsiMeetView = getJitsiView()
+
         setSupportActionBar(binding.toolbar)
-        val videoView = binding.frameLayout
-        jitsiMeetView = JitsiMeetView(this)
+        val frameLayout = binding.frameLayout
 
         registerForBroadcastMessages()
 
@@ -56,14 +58,15 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
             handleOnBackPressed()
         }
 
-        if (!viewModel.conferenceJoined)
+        if (!viewModel.conferenceJoined && jitsiMeetView != null) {
             jitsiMeetView?.join(viewModel.onConferenceJoinConfig(args.roomName))
+        }
 
         /**
          * If the calculated height of the Frame Layout is less than 900dp
          * we need to force the layout height to at least 900dp else the video call options won't show
          */
-        setupVideoFrame(videoView)
+        setupVideoFrame(frameLayout)
     }
 
     override fun onBackPressed() {
@@ -90,8 +93,8 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
             .show()
     }
 
-    private fun setupVideoFrame(videoView: FrameLayout) {
-        videoView.doOnPreDraw {
+    private fun setupVideoFrame(frameLayout: FrameLayout) {
+        frameLayout.doOnPreDraw {
             val rootWidth = resources.displayMetrics.widthPixels
             val rootHeight = resources.displayMetrics.heightPixels
             val orientation = resources.configuration.orientation
@@ -114,7 +117,12 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
                 layoutParams.height = videoHeight
                 layoutParams.width = videoWidth
             }
-            videoView.addView(jitsiMeetView, videoWidth, videoHeight)
+
+            if (jitsiMeetView != null)
+                frameLayout.addView(jitsiMeetView, videoWidth, videoHeight)
+            else {
+                frameLayout.setBackgroundColor(resources.getColor(R.color.black, theme))
+            }
         }
     }
 
@@ -134,7 +142,8 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             binding.toolbar.visibility = View.VISIBLE
             binding.frameLayout.layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT
-            binding.frameLayout.layoutParams?.height = if(portraitFrameHeight >= 900) portraitFrameHeight else 900
+            binding.frameLayout.layoutParams.height =
+                if (portraitFrameHeight >= 900) portraitFrameHeight else 900
 
             jitsiMeetView?.layoutParams?.width = FrameLayout.LayoutParams.MATCH_PARENT
             jitsiMeetView?.layoutParams?.height = FrameLayout.LayoutParams.MATCH_PARENT
