@@ -24,6 +24,22 @@ android {
         }
     }
 
+    flavorDimensions "dev"
+    productFlavors {
+        full {
+            dimension "dev"
+            applicationIdSuffix ".full"
+            buildConfigField "boolean", "isVideoFeatureEnabled", "true"
+        }
+
+        emulator {
+            dimension "dev"
+            applicationIdSuffix ".emu"
+            buildConfigField "boolean", "isVideoFeatureEnabled", "false"
+        }
+    }
+
+
     buildFeatures {
         viewBinding true
     }
@@ -50,7 +66,7 @@ dependencies {
 
     implementation "androidx.activity:activity-ktx:$activityKtxVersion"
 
-    implementation ("org.jitsi.react:jitsi-meet-sdk:$jitsiMeetVersion") { transitive = true }
+    implementation("org.jitsi.react:jitsi-meet-sdk:$jitsiMeetVersion") { transitive = true }
 
     implementation "io.insert-koin:koin-android:$koinVersion"
 
