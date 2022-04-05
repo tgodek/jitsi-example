@@ -20,19 +20,19 @@ class MeetingViewModel : ViewModel() {
             .build()
     }
 
-    fun onEvent(event: EmbeddedActivityEvents) {
+    fun onEvent(event: MeetingActivityEvents) {
         when (event) {
-            EmbeddedActivityEvents.ConferenceJoined -> {
+            MeetingActivityEvents.ConferenceJoined -> {
                 _videoConferenceState.value = true
             }
-            EmbeddedActivityEvents.ConferenceTerminated -> {
+            MeetingActivityEvents.ConferenceTerminated -> {
                 _videoConferenceState.value = false
             }
         }
     }
 }
 
-sealed class EmbeddedActivityEvents {
-    object ConferenceJoined : EmbeddedActivityEvents()
-    object ConferenceTerminated : EmbeddedActivityEvents()
+sealed class MeetingActivityEvents {
+    object ConferenceJoined : MeetingActivityEvents()
+    object ConferenceTerminated : MeetingActivityEvents()
 }

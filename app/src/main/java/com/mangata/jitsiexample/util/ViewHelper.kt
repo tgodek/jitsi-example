@@ -11,7 +11,6 @@ import com.mangata.jitsiexample.R
 import org.jitsi.meet.sdk.JitsiMeetView
 
 fun Activity.getJitsiView(): JitsiMeetView? {
-
     when (BuildConfig.isVideoFeatureEnabled) {
         true -> {
             return JitsiMeetView(this)

@@ -40,7 +40,7 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
     private val args: MeetingActivityArgs by navArgs()
 
     private var jitsiMeetView: JitsiMeetView? = null
-    private lateinit var fullScreenIcon : ImageView
+    private lateinit var fullScreenIcon: ImageView
     private var portraitFrameHeight: Int = 0
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -80,7 +80,7 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
             val orientation = resources.configuration.orientation
 
-            when(orientation) {
+            when (orientation) {
                 Configuration.ORIENTATION_PORTRAIT -> {
                     requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                 }
@@ -107,8 +107,8 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
     private fun handleOnBackPressed() {
         when {
-            !viewModel.videoConferenceState.value -> finish()
-            else -> showAlertDialog()
+            viewModel.videoConferenceState.value -> showAlertDialog()
+            else -> finish()
         }
     }
 
@@ -214,10 +214,10 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
             val event = BroadcastEvent(it)
             when (event.type) {
                 BroadcastEvent.Type.CONFERENCE_JOINED -> {
-                    viewModel.onEvent(EmbeddedActivityEvents.ConferenceJoined)
+                    viewModel.onEvent(MeetingActivityEvents.ConferenceJoined)
                 }
                 BroadcastEvent.Type.CONFERENCE_TERMINATED -> {
-                    viewModel.onEvent(EmbeddedActivityEvents.ConferenceTerminated)
+                    viewModel.onEvent(MeetingActivityEvents.ConferenceTerminated)
                 }
                 else -> return
             }
