@@ -6,4 +6,5 @@
     <string name="alert_title">Napuštanje sastanka</string>
     <string name="alert_message">Da li ste sigurni da želite napustiti sastanak?</string>
     <string name="video_placeholder">PLACEHOLDER</string>
+    <string name="full_screen">Full Screen</string>
 </resources>

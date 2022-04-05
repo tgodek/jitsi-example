@@ -5,24 +5,30 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.*
 import android.widget.FrameLayout
-import android.widget.TextView
+import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.doOnPreDraw
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.navArgs
 import com.facebook.react.modules.core.PermissionListener
 import com.mangata.jitsiexample.R
 import com.mangata.jitsiexample.databinding.ActivityMeetingBinding
+import com.mangata.jitsiexample.util.configureFullScreenIcon
 import com.mangata.jitsiexample.util.getJitsiView
 import com.mangata.jitsiexample.util.navigationBarHeight
+import kotlinx.coroutines.launch
 import org.jitsi.meet.sdk.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -34,6 +40,7 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
     private val args: MeetingActivityArgs by navArgs()
 
     private var jitsiMeetView: JitsiMeetView? = null
+    private lateinit var fullScreenIcon : ImageView
     private var portraitFrameHeight: Int = 0
 
     private val broadcastReceiver = object : BroadcastReceiver() {
@@ -48,6 +55,8 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         setContentView(binding.root)
 
         jitsiMeetView = getJitsiView()
+        fullScreenIcon = ImageView(this)
+        fullScreenIcon.visibility = View.GONE
 
         setSupportActionBar(binding.toolbar)
         val frameLayout = binding.frameLayout
@@ -58,15 +67,38 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
             handleOnBackPressed()
         }
 
-        if (!viewModel.conferenceJoined && jitsiMeetView != null) {
-            jitsiMeetView?.join(viewModel.onConferenceJoinConfig(args.roomName))
-        }
+        jitsiMeetView?.join(viewModel.onConferenceJoinConfig(args.roomName))
 
         /**
          * If the calculated height of the Frame Layout is less than 900dp
          * we need to force the layout height to at least 900dp else the video call options won't show
          */
         setupVideoFrame(frameLayout)
+
+
+        fullScreenIcon.setOnClickListener {
+
+            val orientation = resources.configuration.orientation
+
+            when(orientation) {
+                Configuration.ORIENTATION_PORTRAIT -> {
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+                Configuration.ORIENTATION_LANDSCAPE -> {
+                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.videoConferenceState.collect { joined ->
+                    if (joined && jitsiMeetView != null) {
+                        fullScreenIcon.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
     }
 
     override fun onBackPressed() {
@@ -75,7 +107,7 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
     private fun handleOnBackPressed() {
         when {
-            viewModel.conferenceTerminated -> finish()
+            !viewModel.videoConferenceState.value -> finish()
             else -> showAlertDialog()
         }
     }
@@ -99,6 +131,8 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
             val rootHeight = resources.displayMetrics.heightPixels
             val orientation = resources.configuration.orientation
 
+            fullScreenIcon.configureFullScreenIcon()
+
             var videoHeight = it.height
             var videoWidth = it.width
 
@@ -118,9 +152,10 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
                 layoutParams.width = videoWidth
             }
 
-            if (jitsiMeetView != null)
+            if (jitsiMeetView != null) {
                 frameLayout.addView(jitsiMeetView, videoWidth, videoHeight)
-            else {
+                frameLayout.addView(fullScreenIcon, 1)
+            } else {
                 frameLayout.setBackgroundColor(resources.getColor(R.color.black, theme))
             }
         }
@@ -132,21 +167,30 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
 
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             binding.toolbar.visibility = View.GONE
-            binding.frameLayout.layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT
-            binding.frameLayout.layoutParams.height = FrameLayout.LayoutParams.MATCH_PARENT
+            fullScreenIcon.setImageResource(R.drawable.ic_close_fullscreen)
+            binding.frameLayout.layoutParams.apply {
+                width = FrameLayout.LayoutParams.MATCH_PARENT
+                height = FrameLayout.LayoutParams.MATCH_PARENT
+            }
 
-            jitsiMeetView?.layoutParams?.width = FrameLayout.LayoutParams.MATCH_PARENT
-            jitsiMeetView?.layoutParams?.height = FrameLayout.LayoutParams.MATCH_PARENT
+            jitsiMeetView?.layoutParams?.apply {
+                width = FrameLayout.LayoutParams.MATCH_PARENT
+                height = FrameLayout.LayoutParams.MATCH_PARENT
+            }
         }
 
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
             binding.toolbar.visibility = View.VISIBLE
-            binding.frameLayout.layoutParams.width = FrameLayout.LayoutParams.MATCH_PARENT
-            binding.frameLayout.layoutParams.height =
-                if (portraitFrameHeight >= 900) portraitFrameHeight else 900
+            fullScreenIcon.setImageResource(R.drawable.ic_fullscreen)
+            binding.frameLayout.layoutParams.apply {
+                width = FrameLayout.LayoutParams.MATCH_PARENT
+                height = if (portraitFrameHeight >= 900) portraitFrameHeight else 900
+            }
 
-            jitsiMeetView?.layoutParams?.width = FrameLayout.LayoutParams.MATCH_PARENT
-            jitsiMeetView?.layoutParams?.height = FrameLayout.LayoutParams.MATCH_PARENT
+            jitsiMeetView?.layoutParams?.apply {
+                width = FrameLayout.LayoutParams.MATCH_PARENT
+                height = FrameLayout.LayoutParams.MATCH_PARENT
+            }
         }
     }
 
@@ -175,17 +219,6 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
                 BroadcastEvent.Type.CONFERENCE_TERMINATED -> {
                     viewModel.onEvent(EmbeddedActivityEvents.ConferenceTerminated)
                 }
-                BroadcastEvent.Type.CONFERENCE_WILL_JOIN -> println("JitsiEvent3")
-                BroadcastEvent.Type.AUDIO_MUTED_CHANGED -> println("JitsiEvent4")
-                BroadcastEvent.Type.PARTICIPANT_JOINED -> println("JitsiEvent5")
-                BroadcastEvent.Type.PARTICIPANT_LEFT -> println("JitsiEvent6")
-                BroadcastEvent.Type.ENDPOINT_TEXT_MESSAGE_RECEIVED -> println("JitsiEvent7")
-                BroadcastEvent.Type.SCREEN_SHARE_TOGGLED -> println("JitsiEvent8")
-                BroadcastEvent.Type.PARTICIPANTS_INFO_RETRIEVED -> println("JitsiEvent9")
-                BroadcastEvent.Type.CHAT_MESSAGE_RECEIVED -> println("JitsiEvent10")
-                BroadcastEvent.Type.CHAT_TOGGLED -> println("JitsiEvent11")
-                BroadcastEvent.Type.VIDEO_MUTED_CHANGED -> println("JitsiEvent12")
-                BroadcastEvent.Type.READY_TO_CLOSE -> println("JitsiEvent13")
                 else -> return
             }
         }
@@ -196,8 +229,8 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         JitsiMeetActivityDelegate.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     override fun requestPermissions(p0: Array<out String>?, p1: Int, p2: PermissionListener?) {
@@ -216,11 +249,6 @@ class MeetingActivity : AppCompatActivity(), JitsiMeetActivityInterface {
     override fun onStop() {
         super.onStop()
         JitsiMeetActivityDelegate.onHostPause(this)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        JitsiMeetActivityDelegate.onActivityResult(this, requestCode, resultCode, data)
     }
 
     override fun onNewIntent(intent: Intent?) {
