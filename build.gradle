@@ -38,6 +38,7 @@ ext {
     activityKtxVersion = '1.4.0'
     jitsiMeetVersion = '4.1.0'
     koinVersion = '3.2.0-beta-1'
+    coroutinelifecycleVersion = '2.5.0-alpha05'
 
     //test
     junitVersion = '4.13.2'
